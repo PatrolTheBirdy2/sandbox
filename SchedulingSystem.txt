@@ -1,0 +1,272 @@
+import json
+import os
+
+
+def clear_screen():
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+class Student:
+
+    def __init__(self, name, schedule=None):
+        self.student_name = name
+        self.student_schedule = schedule if schedule is not None else []
+
+    def add_course(self):
+        period = str(input("Which period? "))
+        for item in self.student_schedule:
+            if str(item[0]) == period:
+                print(f"Sorry, period {period} is occupied!")
+                return
+
+        start_time = input("Start time (e.g., 8:00 AM)? ")
+        end_time = input("End time (e.g., 9:00 AM)? ")
+        course_name = input("Which course? ")
+
+        self.student_schedule.append(
+            (period, start_time, end_time, course_name)
+        )
+        print("Course added successfully!")
+
+    def edit_time_block(self):
+        period_to_edit = str(
+            input("Which period would you like to edit? ")
+        )
+
+        for i in range(len(self.student_schedule)):
+            if str(self.student_schedule[i][0]) == period_to_edit:
+                course_name = self.student_schedule[i][3]
+                print(
+                    f"Editing Period {period_to_edit} ({course_name})"
+                )
+
+                new_start = input("Enter new start time: ")
+                new_end = input("Enter new end time: ")
+
+                self.student_schedule[i] = (
+                    period_to_edit,
+                    new_start,
+                    new_end,
+                    course_name,
+                )
+                print("Time block updated!")
+                return
+
+        print("Period not found in schedule.")
+
+    def remove_course(self):
+        period_remove = str(
+            input("What period would you like to remove? ")
+        )
+        for item in self.student_schedule:
+            if str(item[0]) == period_remove:
+                self.student_schedule.remove(item)
+                print(f"Period {period_remove} removed!")
+                return
+        print("That period is not in your schedule.")
+
+    def to_dict(self):
+        return {
+            "name": self.student_name,
+            "schedule": self.student_schedule,
+        }
+
+
+class Teacher:
+
+    def __init__(self, name, schedule=None):
+        self.teacher_name = name
+        self.teacher_schedule = schedule if schedule is not None else []
+
+    def assign_course(self):
+        period = str(input("Which period? "))
+        for item in self.teacher_schedule:
+            if str(item[0]) == period:
+                print(f"Sorry, period {period} is occupied!")
+                return
+        start_time = input("Start time (e.g., 8:00 AM)? ")
+        end_time = input("End time (e.g., 9:00 AM)? ")
+        course_name = input("Which course? ")
+
+        self.teacher_schedule.append(
+            (period, start_time, end_time, course_name)
+        )
+        print("Course assigned successfully!")
+
+    def edit_time_block(self):
+        period_to_edit = str(
+            input("Which period would you like to edit? ")
+        )
+
+        for i in range(len(self.teacher_schedule)):
+            if str(self.teacher_schedule[i][0]) == period_to_edit:
+                course_name = self.teacher_schedule[i][3]
+                print(
+                    f"Editing Period {period_to_edit} ({course_name})"
+                )
+
+                new_start = input("Enter new start time: ")
+                new_end = input("Enter new end time: ")
+
+                self.teacher_schedule[i] = (
+                    period_to_edit,
+                    new_start,
+                    new_end,
+                    course_name,
+                )
+                print("Time block updated!")
+                return
+
+        print("Period not found in schedule.")
+
+    def remove_course(self):
+        period_remove = str(
+            input("What period would you like to remove? ")
+        )
+        for item in self.teacher_schedule:
+            if str(item[0]) == period_remove:
+                self.teacher_schedule.remove(item)
+                print(f"Period {period_remove} removed!")
+                return
+        print("That period is not in your schedule.")
+
+    def to_dict(self):
+        return {
+            "name": self.teacher_name,
+            "schedule": self.teacher_schedule,
+        }
+
+
+def save_data(students_list, teachers_list):
+    data = {
+        "students": [s.to_dict() for s in students_list],
+        "teachers": [t.to_dict() for t in teachers_list],
+    }
+    with open("school_data.json", "w") as file:
+        json.dump(data, file, indent=4)
+    print("\n[Progress saved to school_data.json!]")
+
+
+def load_data():
+    if not os.path.exists("school_data.json"):
+        return [], []
+
+    try:
+        with open("school_data.json", "r") as file:
+            data = json.load(file)
+            students = [
+                Student(s["name"], s["schedule"])
+                for s in data.get("students", [])
+            ]
+            teachers = [
+                Teacher(t["name"], t["schedule"])
+                for t in data.get("teachers", [])
+            ]
+            return students, teachers
+    except (json.JSONDecodeError, KeyError):
+        return [], []
+
+
+# Load existing data on program startup
+all_students, all_teachers = load_data()
+
+running = True
+while running:
+    clear_screen()
+    print("Hello! Are you a...")
+    print("Student (1)")
+    print("Teacher (2)")
+    print("OR quit program (3)")
+
+    useroption1 = input("Option: ")
+
+    if useroption1 == "3":
+        save_data(all_students, all_teachers)
+        print("Goodbye!")
+        running = False
+
+    elif useroption1 == "1":
+        name = input("What is your name? ")
+
+        student1 = None
+        for s in all_students:
+            if s.student_name == name:
+                student1 = s
+                break
+
+        if student1 is None:
+            student1 = Student(name)
+            all_students.append(student1)
+
+        student_active = True
+        while student_active:
+            clear_screen()
+            print(f"Hello {student1.student_name}!")
+            print("Press 1 to add a course.")
+            print("Press 2 to remove a course.")
+            print("Press 3 to edit a period's time block.")
+            print("Press 4 to view your courses.")
+            print("Press 5 to quit to main menu.")
+
+            studentoption = input("Option: ")
+
+            if studentoption == "1":
+                student1.add_course()
+                input("\nPress Enter to return to menu...")
+            elif studentoption == "2":
+                student1.remove_course()
+                input("\nPress Enter to return to menu...")
+            elif studentoption == "3":
+                student1.edit_time_block()
+                input("\nPress Enter to return to menu...")
+            elif studentoption == "4":
+                print(f"\nYour schedule: {student1.student_schedule}")
+                input("\nPress Enter to return to menu...")
+            elif studentoption == "5":
+                student_active = False
+                save_data(all_students, all_teachers)
+                input("\nPress Enter to continue...")
+
+    elif useroption1 == "2":
+        name = input("What is your name? ")
+
+        teacher1 = None
+        for t in all_teachers:
+            if t.teacher_name == name:
+                teacher1 = t
+                break
+
+        if teacher1 is None:
+            teacher1 = Teacher(name)
+            all_teachers.append(teacher1)
+
+        teacher_active = True
+        while teacher_active:
+            clear_screen()
+            print(f"Hello {teacher1.teacher_name}!")
+            print("Press 1 to assign a period.")
+            print("Press 2 to remove a period.")
+            print("Press 3 to edit a period's time block.")
+            print("Press 4 to view your schedule.")
+            print("Press 5 to quit to main menu.")
+
+            teacheroption = input("Option: ")
+
+            if teacheroption == "1":
+                teacher1.assign_course()
+                input("\nPress Enter to return to menu...")
+            elif teacheroption == "2":
+                teacher1.remove_course()
+                input("\nPress Enter to return to menu...")
+            elif teacheroption == "3":
+                teacher1.edit_time_block()
+                input("\nPress Enter to return to menu...")
+            elif teacheroption == "4":
+                print(
+                    f"\nYour schedule is: {teacher1.teacher_schedule}"
+                )
+                input("\nPress Enter to return to menu...")
+            elif teacheroption == "5":
+                teacher_active = False
+                save_data(all_students, all_teachers)
+                input("\nPress Enter to continue...")
